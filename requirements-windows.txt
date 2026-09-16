@@ -1,0 +1,3 @@
+# The platform installer uses the PEP 517 project metadata directly.
+# This file is provided for users who prefer an explicit requirements file.
+-r requirements.txt

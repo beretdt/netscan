@@ -1,0 +1,42 @@
+# Relatório do scan {{ scan.scan_id or 'não salvo' }}
+
+- Tipo: `{{ scan.scan_type }}`
+- Alvo: `{{ scan.target }}`
+- Perfil: `{{ scan.profile }}`
+- Plugins: `{{ scan.plugins | join(', ') }}`
+- Início: `{{ scan.started_at }}`
+- Fim: `{{ scan.finished_at }}`
+- Hosts: `{{ scan.hosts | length }}`
+- Findings: `{{ scan.findings | length }}`
+
+## Hosts
+{% for host in scan.hosts %}
+### {{ host.address }}
+- Estado: `{{ host.state }}`
+- Origem: `{{ host.source or '-' }}`
+- Hostnames: `{{ host.hostnames | join(', ') or '-' }}`
+- MAC: `{{ host.mac or '-' }}`
+- Fabricante: `{{ host.vendor or '-' }}`
+{% if host.ports %}
+
+| Porta | Proto | Serviço | Produto | Versão | TLS |
+| --- | --- | --- | --- | --- | --- |
+{% for port in host.ports %}| {{ port.port }} | {{ port.protocol }} | {{ port.service or '-' }} | {{ port.product or '-' }} | {{ port.version or '-' }} | {% if port.tls %}{{ port.tls.sha256 }}{% else %}-{% endif %} |
+{% endfor %}
+{% endif %}
+
+{% endfor %}
+{% if scan.metadata.screenshots %}
+## Screenshots
+{% for artifact in scan.metadata.screenshots %}- {{ artifact.url }} -> {{ artifact.path }}
+{% endfor %}
+{% endif %}
+## Findings
+{% if scan.findings %}
+{% for finding in scan.findings %}- **[{{ finding.severity }}]** {{ finding.plugin }} em `{{ finding.host }}{% if finding.port %}:{{ finding.port }}/{{ finding.protocol }}{% endif %}` — {{ finding.title }}
+{% if finding.cves %}  - CVEs: {{ finding.cves | join(', ') }}
+{% endif %}  - {{ finding.description or 'Sem descrição.' }}
+{% endfor %}
+{% else %}
+Nenhum finding registrado.
+{% endif %}

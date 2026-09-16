@@ -1,0 +1,62 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "netmapper"
+version = "0.2.0"
+description = "Descoberta ARP/passiva, scan externo, CVE offline e dashboard Flask"
+requires-python = ">=3.10"
+classifiers = [
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: Microsoft :: Windows",
+]
+dependencies = [
+    "Flask>=3.0,<4.0",
+    "scapy>=2.5,<3.0",
+    "mac-vendor-lookup>=0.1.12,<1.0",
+]
+
+[project.optional-dependencies]
+crypto = ["cryptography>=43,<46"]
+snmp = ["pysnmp>=6,<8"]
+screenshots = ["playwright>=1.46,<2.0"]
+all = [
+    "cryptography>=43,<46",
+    "pysnmp>=6,<8",
+    "playwright>=1.46,<2.0",
+]
+
+[project.scripts]
+Nestscan = "nestscan:main"
+Netscan = "nestscan:main"
+netscan = "nestscan:main"
+netmapper-dashboard = "app:main"
+
+[tool.setuptools]
+py-modules = [
+    "app",
+    "external",
+    "nestscan",
+    "scanner",
+    "vendor",
+    "vuln",
+    "schema",
+    "plugins",
+    "scope",
+    "persistence",
+    "reporting",
+    "passive",
+    "cve_db",
+    "tlsinfo",
+    "credentials",
+    "nuclei",
+    "screenshots",
+    "subdomains",
+]
+
+[tool.setuptools.packages.find]
+include = ["netmapper_templates"]
+
+[tool.setuptools.package-data]
+netmapper_templates = ["*.html", "*.j2"]

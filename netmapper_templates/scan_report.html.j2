@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>NetMapper Report {{ scan.scan_id or '' }}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    .sev-high { color: #b91c1c; }
+    .sev-critical { color: #7f1d1d; }
+    .sev-medium { color: #b45309; }
+  </style>
+</head>
+<body>
+  <h1>Relatório NetMapper</h1>
+  <ul>
+    <li><strong>Scan ID:</strong> {{ scan.scan_id or 'não salvo' }}</li>
+    <li><strong>Tipo:</strong> {{ scan.scan_type }}</li>
+    <li><strong>Alvo:</strong> {{ scan.target }}</li>
+    <li><strong>Perfil:</strong> {{ scan.profile }}</li>
+    <li><strong>Plugins:</strong> {{ scan.plugins | join(', ') }}</li>
+    <li><strong>Início:</strong> {{ scan.started_at }}</li>
+    <li><strong>Fim:</strong> {{ scan.finished_at }}</li>
+  </ul>
+
+  <h2>Hosts</h2>
+  {% for host in scan.hosts %}
+  <h3>{{ host.address }}</h3>
+  <p>Estado={{ host.state }} | Origem={{ host.source or '-' }} | Hostnames={{ host.hostnames | join(', ') or '-' }}</p>
+  {% if host.ports %}
+  <table>
+    <thead><tr><th>Porta</th><th>Proto</th><th>Serviço</th><th>Produto</th><th>Versão</th><th>TLS</th></tr></thead>
+    <tbody>
+      {% for port in host.ports %}
+      <tr>
+        <td>{{ port.port }}</td><td>{{ port.protocol }}</td><td>{{ port.service or '-' }}</td>
+        <td>{{ port.product or '-' }}</td><td>{{ port.version or '-' }}</td>
+        <td>{% if port.tls %}SHA-256 {{ port.tls.sha256 }}; expira {{ port.tls.not_after or '-' }}{% else %}-{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>Sem portas registradas.</p>
+  {% endif %}
+  {% endfor %}
+
+  {% if scan.metadata.screenshots %}
+  <h2>Screenshots</h2>
+  <ul>
+    {% for artifact in scan.metadata.screenshots %}
+    <li>{{ artifact.url }} &rarr; {{ artifact.path }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  <h2>Findings</h2>
+  {% if scan.findings %}
+  <table>
+    <thead><tr><th>Severidade</th><th>Plugin</th><th>Host</th><th>Título</th><th>Descrição</th></tr></thead>
+    <tbody>
+      {% for finding in scan.findings %}
+      <tr>
+        <td class="sev-{{ finding.severity|lower }}">{{ finding.severity }}</td>
+        <td>{{ finding.plugin }}</td>
+        <td>{{ finding.host }}{% if finding.port %}:{{ finding.port }}/{{ finding.protocol }}{% endif %}</td>
+        <td>{{ finding.title }}</td>
+        <td>{{ finding.description or '-' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>Nenhum finding registrado.</p>
+  {% endif %}
+</body>
+</html>

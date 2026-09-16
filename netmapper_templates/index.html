@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>NetMapper</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 24px;
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+
+        .container {
+            max-width: 1080px;
+            margin: 0 auto;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            background: #111827;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        h1, h2 {
+            margin-top: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 10px;
+            border-bottom: 1px solid #334155;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: end;
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 0.95rem;
+        }
+
+        input, button {
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid #475569;
+            background: #0f172a;
+            color: inherit;
+        }
+
+        button {
+            cursor: pointer;
+            background: #2563eb;
+            border-color: #2563eb;
+        }
+
+        button:disabled {
+            cursor: wait;
+            opacity: 0.65;
+        }
+
+        .error {
+            color: #fca5a5;
+            min-height: 1.2em;
+        }
+
+        .muted {
+            color: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>NetMapper</h1>
+        <p class="muted">Descoberta ARP com atualização periódica e gatilho manual.</p>
+
+        <div class="grid">
+            <section class="card">
+                <h2>Configuração</h2>
+                <p><strong>Rede padrão:</strong> <span id="configured-cidr"></span></p>
+                <p><strong>Intervalo:</strong> <span id="configured-interval"></span></p>
+                <p><strong>Timeout:</strong> <span id="configured-timeout"></span></p>
+            </section>
+            <section class="card">
+                <h2>Status</h2>
+                <p><strong>Em progresso:</strong> <span id="scan-in-progress"></span></p>
+                <p><strong>Origem atual:</strong> <span id="current-scan-source"></span></p>
+                <p><strong>Última origem:</strong> <span id="last-scan-source"></span></p>
+                <p><strong>Total de scans:</strong> <span id="scan-count"></span></p>
+            </section>
+            <section class="card">
+                <h2>Última execução</h2>
+                <p><strong>Rede:</strong> <span id="last-effective-cidr"></span></p>
+                <p><strong>Timeout:</strong> <span id="last-effective-timeout"></span></p>
+                <p><strong>Início:</strong> <span id="last-scan-started-at"></span></p>
+                <p><strong>Fim:</strong> <span id="last-scan-finished-at"></span></p>
+            </section>
+            <section class="card">
+                <h2>Dispositivos</h2>
+                <p><strong>Encontrados:</strong> <span id="device-count"></span></p>
+                <p class="error" id="last-error"></p>
+            </section>
+        </div>
+
+        <section class="card">
+            <h2>Scan manual</h2>
+            <div class="controls">
+                <label>
+                    CIDR opcional
+                    <input id="manual-cidr" type="text" placeholder="Ex.: 192.168.1.0/24">
+                </label>
+                <label>
+                    Timeout opcional (s)
+                    <input id="manual-timeout" type="number" step="0.1" min="0.2" max="30">
+                </label>
+                <button id="scan-button" type="button">Executar scan</button>
+            </div>
+            <p class="error" id="manual-error"></p>
+        </section>
+
+        <section class="card">
+            <h2>Hosts descobertos</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>IP</th>
+                        <th>MAC</th>
+                        <th>Fabricante</th>
+                    </tr>
+                </thead>
+                <tbody id="devices-body"></tbody>
+            </table>
+        </section>
+    </div>
+
+    <script>
+        const initialState = {{ snapshot | tojson }};
+        const pollIntervalMs = 5000;
+
+        function setText(id, value, fallback = "—") {
+            const element = document.getElementById(id);
+            element.textContent = value === null || value === undefined || value === "" ? fallback : String(value);
+        }
+
+        function renderDevices(devices) {
+            const body = document.getElementById("devices-body");
+            body.replaceChildren();
+
+            if (!Array.isArray(devices) || devices.length === 0) {
+                const row = document.createElement("tr");
+                const cell = document.createElement("td");
+                cell.colSpan = 3;
+                cell.className = "muted";
+                cell.textContent = "Nenhum dispositivo encontrado.";
+                row.appendChild(cell);
+                body.appendChild(row);
+                return;
+            }
+
+            for (const device of devices) {
+                const row = document.createElement("tr");
+                for (const field of ["ip", "mac", "vendor"]) {
+                    const cell = document.createElement("td");
+                    cell.textContent = device[field] || "—";
+                    row.appendChild(cell);
+                }
+                body.appendChild(row);
+            }
+        }
+
+        function renderState(state) {
+            setText("configured-cidr", state.configured_cidr);
+            setText("configured-interval", `${state.configured_interval} s`);
+            setText("configured-timeout", `${state.configured_timeout} s`);
+            setText("scan-in-progress", state.scan_in_progress ? "Sim" : "Não");
+            setText("current-scan-source", state.current_scan_source);
+            setText("last-scan-source", state.last_scan_source);
+            setText("scan-count", state.scan_count);
+            setText("last-effective-cidr", state.last_effective_cidr);
+            setText("last-effective-timeout", state.last_effective_timeout === null ? null : `${state.last_effective_timeout} s`);
+            setText("last-scan-started-at", state.last_scan_started_at);
+            setText("last-scan-finished-at", state.last_scan_finished_at);
+            setText("device-count", state.device_count);
+            setText("last-error", state.last_error, "");
+
+            const scanButton = document.getElementById("scan-button");
+            scanButton.disabled = Boolean(state.scan_in_progress);
+            renderDevices(state.devices || []);
+        }
+
+        async function loadStatus() {
+            const response = await fetch("/api/status", { headers: { "Accept": "application/json" } });
+            if (!response.ok) {
+                throw new Error(`Falha ao carregar status (${response.status}).`);
+            }
+            return response.json();
+        }
+
+        async function submitManualScan() {
+            const manualError = document.getElementById("manual-error");
+            manualError.textContent = "";
+
+            const cidrValue = document.getElementById("manual-cidr").value.trim();
+            const timeoutValue = document.getElementById("manual-timeout").value.trim();
+            const payload = {};
+
+            if (cidrValue) {
+                payload.cidr = cidrValue;
+            }
+
+            if (timeoutValue) {
+                payload.timeout = timeoutValue;
+            }
+
+            try {
+                const response = await fetch("/api/scan", {
+                    method: "POST",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+
+                if (!response.ok) {
+                    renderState(data.status || initialState);
+                    throw new Error(data.error || `Falha ao executar scan (${response.status}).`);
+                }
+
+                renderState(data);
+            } catch (error) {
+                manualError.textContent = error instanceof Error ? error.message : "Falha desconhecida no scan manual.";
+            }
+        }
+
+        renderState(initialState);
+        document.getElementById("scan-button").addEventListener("click", submitManualScan);
+
+        setInterval(async () => {
+            try {
+                renderState(await loadStatus());
+            } catch (error) {
+                const message = error instanceof Error ? error.message : "Falha desconhecida ao atualizar.";
+                document.getElementById("manual-error").textContent = message;
+            }
+        }, pollIntervalMs);
+    </script>
+</body>
+</html>
