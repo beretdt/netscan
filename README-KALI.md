@@ -11,49 +11,8 @@ Esta é a instalação específica para Kali Linux. Ela usa:
 
 ```bash
 sudo apt update
-sudo apt install -y git openssh-client curl
-```
-
-### Opção A: SSH (recomendado)
-
-Se ainda não houver uma chave SSH no Kali:
-
-```bash
-ssh-keygen -t ed25519 -C "beretdt@kali"
-```
-
-Responda aos prompts do `ssh-keygen` antes de executar qualquer outro comando:
-pressione Enter para aceitar `~/.ssh/id_ed25519` ou informe um caminho próprio;
-depois defina e confirme a passphrase.
-
-```bash
-cat ~/.ssh/id_ed25519.pub
-```
-
-Adicione a chave exibida em
-<https://github.com/settings/keys>. Depois valide e clone:
-
-```bash
-ssh -T git@github.com
-git clone git@github.com:beretdt/netscan.git
-cd netscan
-bash install-kali.sh
-```
-
-### Opção B: GitHub CLI
-
-O pacote `gh` pode não existir no apt do Kali. Instale o release oficial:
-
-```bash
-GH_VERSION="$(curl -fsSL https://api.github.com/repos/cli/cli/releases/latest \
-  | sed -n 's/.*"tag_name": "v\([^"]*\)".*/\1/p' | head -n1)"
-GH_ARCH="$(case "$(dpkg --print-architecture)" in amd64) echo amd64;; arm64) echo arm64;; armhf) echo armv6;; *) echo unsupported;; esac)"
-test "$GH_ARCH" != unsupported
-curl -fL "https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_${GH_ARCH}.tar.gz" -o /tmp/gh.tar.gz
-tar -xzf /tmp/gh.tar.gz -C /tmp
-sudo install -m 0755 "/tmp/gh_${GH_VERSION}_linux_${GH_ARCH}/bin/gh" /usr/local/bin/gh
-gh auth login --hostname github.com --git-protocol https --web
-gh repo clone beretdt/netscan
+sudo apt install -y git
+git clone https://github.com/beretdt/netscan.git
 cd netscan
 bash install-kali.sh
 ```

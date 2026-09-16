@@ -19,12 +19,10 @@ captura de pacotes:
 - [Windows](README-WINDOWS.md): `.\install-windows.ps1`, WinGet, Nmap/Npcap e
   `.venv-windows`.
 
-Clone do projeto. Como este repositório está privado, autentique o GitHub CLI
-antes:
+Clone público do projeto:
 
 ```bash
-gh auth login --hostname github.com --git-protocol https --web
-gh repo clone beretdt/netscan
+git clone https://github.com/beretdt/netscan.git
 cd netscan
 ```
 
