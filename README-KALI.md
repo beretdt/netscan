@@ -9,12 +9,9 @@ Esta é a instalação específica para Kali Linux. Ela usa:
 
 ## Baixar pelo terminal
 
-Depois de publicar este diretório em um repositório Git, substitua a URL abaixo
-pela URL real do repositório:
-
 ```bash
-git clone "URL_DO_SEU_REPOSITORIO" netmapper
-cd netmapper
+git clone https://github.com/beretdt/netscan.git
+cd netscan
 bash install-kali.sh
 ```
 

@@ -16,6 +16,15 @@ Set-ExecutionPolicy -Scope Process Bypass
 .\install-windows.ps1
 ```
 
+Para baixar o projeto público pelo terminal:
+
+```powershell
+git clone https://github.com/beretdt/netscan.git
+Set-Location .\netscan
+Set-ExecutionPolicy -Scope Process Bypass
+.\install-windows.ps1
+```
+
 O instalador cria `.venv-windows`, instala o pacote Python e tenta instalar o
 Nmap com:
 

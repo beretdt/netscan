@@ -19,6 +19,13 @@ captura de pacotes:
 - [Windows](README-WINDOWS.md): `.\install-windows.ps1`, WinGet, Nmap/Npcap e
   `.venv-windows`.
 
+Clone público do projeto:
+
+```bash
+git clone https://github.com/beretdt/netscan.git
+cd netscan
+```
+
 Para desenvolvimento manual em qualquer plataforma:
 
 ```bash
