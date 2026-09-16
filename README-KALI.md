@@ -10,7 +10,10 @@ Esta é a instalação específica para Kali Linux. Ela usa:
 ## Baixar pelo terminal
 
 ```bash
-git clone https://github.com/beretdt/netscan.git
+sudo apt update
+sudo apt install -y git gh
+gh auth login --hostname github.com --git-protocol https --web
+gh repo clone beretdt/netscan
 cd netscan
 bash install-kali.sh
 ```

@@ -19,7 +19,9 @@ Set-ExecutionPolicy -Scope Process Bypass
 Para baixar o projeto público pelo terminal:
 
 ```powershell
-git clone https://github.com/beretdt/netscan.git
+winget install --id GitHub.cli --exact
+gh auth login --hostname github.com --git-protocol https --web
+gh repo clone beretdt/netscan
 Set-Location .\netscan
 Set-ExecutionPolicy -Scope Process Bypass
 .\install-windows.ps1
