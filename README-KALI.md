@@ -20,6 +20,13 @@ Se ainda não houver uma chave SSH no Kali:
 
 ```bash
 ssh-keygen -t ed25519 -C "beretdt@kali"
+```
+
+Responda aos prompts do `ssh-keygen` antes de executar qualquer outro comando:
+pressione Enter para aceitar `~/.ssh/id_ed25519` ou informe um caminho próprio;
+depois defina e confirme a passphrase.
+
+```bash
 cat ~/.ssh/id_ed25519.pub
 ```
 
